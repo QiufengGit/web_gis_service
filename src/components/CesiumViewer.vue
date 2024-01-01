@@ -7,9 +7,16 @@ import * as Cesium from "cesium";
 import { Viewer } from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { onMounted } from "vue";
+import "cesium-windy-canvas";
 
-import {CV} from '../3d/CV.js';
+import CesiumWindyData from '../mock/cesiumwindy.data';
+import CanvasParticle from '../windy/canvasparticle';
+import CanvasWindField from '../windy/canvaswindfield';
+import CesiumWindy from '../windy/cesiumwindy';
+import WindyColor from '../windy/windyColor';
 
+let windy;
+let wind_params;
 
 onMounted(() => {
   const viewer = new Viewer("viewerContainer",
@@ -86,7 +93,7 @@ onMounted(() => {
       var alti_String = (
         window.CesiumViewer.camera.positionCartographic.height / 1000
       ).toFixed(2);
-      console.log(lat_String, log_String, alti_String)
+      // console.log(lat_String, log_String, alti_String)
       // that.longitude = log_String;
       // that.latitude = lat_String;
       // that.altitude = alti_String;
@@ -107,7 +114,51 @@ onMounted(() => {
   //       negativeZ: 'src/img/skybox/3/tycho2t3_80_mz.jpg'
   //   }
   // })
+
+  //@风场
+  const windycanvas = document.getElementById('windycanvas')
+  //风场参数
+  wind_params = {
+    viewer: viewer,
+    canvas: windycanvas,
+
+    canvasWidth: window.innerWidth,
+    canvasHeight: window.innerHeight,
+    speedRate: 7000, //速度 值越大 月满
+    maxAge: 100, //周期
+    particlesNumber: 12000,//数目
+    frameTime: 10,//每秒刷新次数 越大越快
+    lineWidth: 2,//线宽度
+  };
+  // 风场 调用
+  // 使用 CesiumWindyApi.CesiumWindy()
+  windy = new CesiumWindy(CesiumWindyData, wind_params);
+  // windy._resize(window.innerWidth, window.innerHeight);
+
+
+  handler.setInputAction(function (click) {
+    click.value = true
+    var windycanvas = document.getElementById("windycanvas");
+    windycanvas.style.display = "none";
+    console.log("click")
+    // 具体的处理逻辑在这里
+    // 可以根据需求修改clicked的值，或执行其他操作
+  }, Cesium.ScreenSpaceEventType.LEFT_DOWN)
+
+  handler.setInputAction(function (click) {
+    click.value = true
+    var windycanvas = document.getElementById("windycanvas");
+    windy.redraw();
+    windycanvas.style.display = "block";
+    console.log("click")
+    // 具体的处理逻辑在这里
+    // 可以根据需求修改clicked的值，或执行其他操作
+  }, Cesium.ScreenSpaceEventType.LEFT_UP)
 });
+
+// //粒子大小控制
+// $("#particleSize").on("input change", function () {
+// });
 
 
 </script>

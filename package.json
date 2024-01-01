@@ -11,6 +11,8 @@
   "dependencies": {
     "@vicons/material": "^0.12.0",
     "cesium": "^1.112.0",
+    "cesium-particle": "^0.9.1",
+    "cesium-windy-canvas": "^1.1.1",
     "dat.gui": "^0.7.9",
     "jquery": "^3.7.1",
     "naive-ui": "^2.35.0",
