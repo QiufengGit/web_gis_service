@@ -21,16 +21,14 @@
                   清除图层
                 </n-button> -->
 
+                <n-dropdown trigger="hover" :options="options_taifeng" @select="handleTaifengSelect">
+                  <n-button>台风轨迹</n-button>
+                </n-dropdown>
+
 
                 <n-button type="primary" ghost @click="handleLocateChina">
                   定位中国
                 </n-button>
-
-
-                <n-button type="primary" ghost @click="handleLocateUSA">
-                  定位美国
-                </n-button>
-
 
                 <n-button type="primary" ghost @click="useGoogleMap">
                   谷歌地图
@@ -52,7 +50,7 @@
             </template>
           </n-page-header>
         </n-layout-header>
-        <CesiumViewer />
+        <CesiumViewer ref="cesiumViewerRef"/>
         <div id="canvasContainer">
           <canvas id="windycanvas" width="1500" height="700"></canvas>
         </div>
@@ -63,37 +61,37 @@
 
         <div id="toolbar" class="param-container">
           <div class="param-item">
-              <label>粒子大小: </label>
-              <input type="range" id="particleSize" min="1" max="10" value="1.2" step="1" style="width: 170px">
+            <label>粒子数目: </label>
+            <input type="range" id="particleNum" min="1000" max="30000" value="12000" step="1000" style="width: 170px">
           </div>
           <div class="param-item">
               <label>生命周期: </label>
-              <input type="range" id="particleLife" min="1" max="20" value="5" step="1" style="width: 170px">
-          </div>
-          <div class="param-item">
-              <label>粒子密度: </label>
-              <input type="range" id="particleDensity" min="0.1" max="3" value="1" step="0.1" style="width: 170px">
+              <input type="range" id="particleLife" min="50" max="200" value="100" step="10" style="width: 170px">
           </div>
           <div class="param-item">
               <label>粒子速度: </label>
-              <input type="range" id="particleVelocityScale" min="0.1" max="5" value="0.4" step="0.1" style="width: 170px">
+              <input type="range" id="particleVelocityScale" min="500" max="20000" value="7000" step="500" style="width: 170px">
           </div>
           <div class="param-item">
+            <label>每秒刷新率: </label>
+            <input type="range" id="frameTime" min="5" max="20" value="10" step="1" style="width: 155px">
+        </div>
+          <!-- <div class="param-item">
               <label>图层可见性 </label>
               <input type="checkbox" id="fieldLayerVisible" checked=true>
           </div>
           <div class="param-item">
               <label>场景泛光</label>
               <input type="checkbox" id="show" checked>
-          </div>
+          </div> -->
           <div class="param-item">
-              <label>亮度阈值: </label>
-              <input type="range" id="threshold" min="0" max="1" value="0.5" step="0.1" style="width: 170px">
+              <label>线宽度: </label>
+              <input type="range" id="lineWidth" min="1" max="7" value="2" step="1" style="width: 180px">
           </div>
-          <div class="param-item">
+          <!-- <div class="param-item">
               <label>泛光强度: </label>
               <input type="range" id="bloomIntensity" min="0" max="10" value="2" step="0.1" style="width: 170px">
-          </div>
+          </div> -->
           <div class="param-item">
               <button type="button" id="startField" class="button black">启动风场</button>
               <button type="button" id="changeFieldData" class="button black" style="margin-left: 49px;">切换数据</button>
@@ -115,39 +113,107 @@ import CesiumViewer from '@/components/CesiumViewer.vue';
 // import $ from 'jquery';
 import { ref } from 'vue'
 import 'naive-ui';
+import { taifengData_Malakas,  taifengData_Chaba, taifengData_Nalgae, taifengData_Surigae} from '@/types/data';
 
 const map = ref<string>('');
+const cesiumViewerRef = ref();
+const show_taifeng = ref<boolean>(false);
 
-const options = ref([
-  {
-    label: '美国降水反射率的数据图层',
-    key: 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?nexrad-n0r-900913-m50m'
-  },
-  {
-    label: '美国干旱反射率的数据图层',
-    key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_vegdri_conus_week_data/vegdri_conus_week_data/wms?vegdri_conus_week_data'
-  },
-  {
-    label: '美国降水量的数据图层',
-    key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-tp-7_conus_day_data/precip-tp-7_conus_day_data/wms?precip-tp-7_conus_day_data'
-  },
-  {
-    label: '美国水观察的数据图层',
-    key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_water_watch_today/water_watch_today/wms?water_watch_today'
-  },
-  {
-    label: '美国降水天数的数据图层',
-    key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-rd-30_conus_day_data/precip-rd-30_conus_day_data/wms?precip-rd-30_conus_day_data'
-  },
-  {
-    label: '美国最大连续干旱天数的数据图层',
-    key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-cdd-30_conus_day_data/precip-cdd-30_conus_day_data/wms?precip-cdd-30_conus_day_data'
-  },
-  {
-    label: '美国降水后天数的数据图层',
-    key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-dsr_conus_day_data/precip-dsr_conus_day_data/wms?precip-dsr_conus_day_data'
-  }
+// const options = ref([
+//   {
+//     label: '美国降水反射率的数据图层',
+//     key: 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?nexrad-n0r-900913-m50m'
+//   },
+//   {
+//     label: '美国干旱反射率的数据图层',
+//     key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_vegdri_conus_week_data/vegdri_conus_week_data/wms?vegdri_conus_week_data'
+//   },
+//   {
+//     label: '美国降水量的数据图层',
+//     key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-tp-7_conus_day_data/precip-tp-7_conus_day_data/wms?precip-tp-7_conus_day_data'
+//   },
+//   {
+//     label: '美国水观察的数据图层',
+//     key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_water_watch_today/water_watch_today/wms?water_watch_today'
+//   },
+//   {
+//     label: '美国降水天数的数据图层',
+//     key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-rd-30_conus_day_data/precip-rd-30_conus_day_data/wms?precip-rd-30_conus_day_data'
+//   },
+//   {
+//     label: '美国最大连续干旱天数的数据图层',
+//     key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-cdd-30_conus_day_data/precip-cdd-30_conus_day_data/wms?precip-cdd-30_conus_day_data'
+//   },
+//   {
+//     label: '美国降水后天数的数据图层',
+//     key: 'https://edcintl.cr.usgs.gov/geoserver/quickdri_precip-dsr_conus_day_data/precip-dsr_conus_day_data/wms?precip-dsr_conus_day_data'
+//   }
+// ]);
+
+
+interface TyphoonData 
+{
+  [key: string]: any;
+}
+
+const data: { [key: string]: TyphoonData } = 
+{
+  'Malakas': taifengData_Malakas,
+  'Chaba': taifengData_Chaba,
+  'Nalgae': taifengData_Nalgae,
+  'Surigae': taifengData_Surigae
+};
+
+
+const options_taifeng = ref([
+      {
+        label: '显示Malakas台风轨迹',
+        key: 'Malakas'
+      },
+      {
+        label: '显示Chaba台风轨迹',
+        key: 'Chaba'
+      },
+      {
+        label: '显示Nalgae台风轨迹',
+        key: 'Nalgae'
+      },
+      {
+        label: '显示Surigae台风轨迹',
+        key: 'Surigae'
+      },
+      {
+        label: '清除台风轨迹',
+        key: 'clear'
+      },
 ]);
+
+const handleTaifengSelect = (key: string) => {
+  if(key != 'clear')
+  {
+    if(show_taifeng.value == true)
+    {
+      cesiumViewerRef.value.clearTaiFeng();
+      cesiumViewerRef.value.initTaiFeng(data[key]);
+    }
+    else
+    {
+      cesiumViewerRef.value.initTaiFeng(data[key]);
+      show_taifeng.value = true;
+    }
+    
+  }
+  else
+  {
+    if(show_taifeng.value == true)
+    {
+      cesiumViewerRef.value.clearTaiFeng();
+      show_taifeng.value = false;
+    }
+     
+  }
+};
+
 
 const handleLocateChina = () => {
   window.CesiumViewer.camera.flyTo({
@@ -297,6 +363,21 @@ const addWMS = (url: string, name: string) => {
 // var canvas=document.getElementById('windycanvas');    
 // canvas.width=canvas.clientWidth*window.devicePixelRatio;
 // canvas.height=canvas.clientHeight*window.devicePixelRatio; 
+
+
+
+
+let num_judge=1;
+const switch_wind = () => {
+  var windycanvas = document.getElementById("windycanvas");
+  if (num_judge==1){
+    windycanvas.style.display = "none";
+  }
+  else if(num_judge==0){
+    windycanvas.style.display = "block";
+  }
+  num_judge=(num_judge+1)%2;
+};
 
 </script>
 

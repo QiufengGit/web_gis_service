@@ -1,0 +1,66 @@
+{
+    "type": "FeatureCollection",
+    "name": "48小警戒线",
+    "crs": {
+      "type": "name",
+      "properties": {
+        "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+      }
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "Id": 0,
+          "vertex_index": 0,
+          "vertex_part": 0,
+          "vertex_part_index": 0,
+          "distance": 0.0,
+          "angle": 38.450363237102223
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            119.982587975857427,
+            -0.018882194922753
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "Id": 0,
+          "vertex_index": 1,
+          "vertex_part": 0,
+          "vertex_part_index": 1,
+          "distance": 19.238717573888859,
+          "angle": 19.46315735588648
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            131.945923047920701,
+            15.047864893994642
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "Id": 0,
+          "vertex_index": 2,
+          "vertex_part": 0,
+          "vertex_part_index": 2,
+          "distance": 38.144187546729142,
+          "angle": 0.47595147467075
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            132.102967474305387,
+            33.952682585316268
+          ]
+        }
+      }
+    ]
+  }

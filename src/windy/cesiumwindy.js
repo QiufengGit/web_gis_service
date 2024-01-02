@@ -26,7 +26,7 @@ export default class CesiumWindy {
     this.windField = null;
     this.particles = [];
     this.animateFrame = null;// requestAnimationFrame事件句柄，用来清除操作
-    this.isdistory = false;// 是否销毁，进行删除操作
+    this.isdistory = params.isdistory;// 是否销毁，进行删除操作
     this.windyColor = params.windyColor || new WindyColor();
     // eslint-disable-next-line
     this._init();
@@ -86,6 +86,20 @@ export default class CesiumWindy {
 
   // 根据现有参数重新生成风场
   redraw() {
+    window.cancelAnimationFrame(this.animateFrame);
+    this.particles = [];
+    // eslint-disable-next-line
+    this._init();
+  }
+
+   // 根据现有参数重新生成风场
+  redraw_param(params) {
+    this.speedRate = params.speedRate || 1000;// 风前进速率，意思是将当前风场横向纵向分成100份，再乘以风速就能得到移动位置，无论地图缩放到哪一级别都是一样的速度，可以用该数值控制线流动的快慢，值越大，越慢，
+    this.particlesNumber = params.particlesNumber || 1200;// 初始粒子总数，根据实际需要进行调节
+    this.maxAge = params.maxAge || 100;// 每个粒子的最大生存周期
+    this.frameTime = 1000 / (params.frameRate || 10);// 每秒刷新次数，因为requestAnimationFrame固定每秒60次的渲染，所以如果不想这么快，就把该数值调小一些
+    this.lineWidth = params.lineWidth || 1;// 线宽度
+
     window.cancelAnimationFrame(this.animateFrame);
     this.particles = [];
     // eslint-disable-next-line
@@ -187,7 +201,7 @@ export default class CesiumWindy {
   removeLines() {
     window.cancelAnimationFrame(this.animateFrame);
     this.isdistory = true;
-    this.canvas.width = 1;
+    // this.canvas.width = 1;
     document.getElementById('content')?.removeChild(this.canvas);
   }
 
