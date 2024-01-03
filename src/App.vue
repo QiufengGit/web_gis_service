@@ -13,20 +13,20 @@
                 </span>
 
                 <div class="button-group1">
-                  <n-button class="btn1" type="primary" ghost @click="toggleToolbar">
+                  <n-button size="small" class="btn1" type="primary" ghost @click="toggleToolbar">
                     风场
                   </n-button>
 
                   <n-dropdown trigger="hover" :options="options_taifeng" @select="handleTaifengSelect">
-                    <n-button class="btn1">台风轨迹</n-button>
+                    <n-button size="small" class="btn1">台风轨迹</n-button>
                   </n-dropdown>
 
                   <n-dropdown trigger="hover" :options="options_layers" @select="handleLayerSelect">
-                    <n-button class="btn1">图层显示</n-button>
+                    <n-button size="small" class="btn1">图层显示</n-button>
                   </n-dropdown>
 
                   <n-dropdown trigger="hover" :options="options_Ranging" @select="handleRanging">
-                    <n-button class="btn1">测距</n-button>
+                    <n-button size="small" class="btn1">测距</n-button>
                   </n-dropdown>
 
 
@@ -35,21 +35,21 @@
 
               <div class="button-group2">
 
-                <n-button class="btn1" type="primary" ghost @click="useGoogleMap">
+                <n-button class="btn1" size="small" type="primary" ghost @click="useGoogleMap">
                   谷歌地图
                 </n-button>
 
-                <n-button class="btn1" type="primary" ghost @click="show_taifeng_data">
+                <n-button class="btn1" size="small" type="primary" ghost @click="show_taifeng_data">
                   台风频次表
                 </n-button>
 
                 <n-dropdown trigger="hover" :options="options_name_table" @select="handletableSelect">
-                  <n-button class="btn1">图表类型</n-button>
+                  <n-button size="small" class="btn1">图表类型</n-button>
                 </n-dropdown>
 
                 <n-popselect v-model:value="current_taifeng" :options="options_name_taifeng" trigger="click" size="medium"
                   scrollable v-on:click="handlePopselectClick">
-                  <n-button>台风：{{ current_taifeng || '请选择台风' }}</n-button>
+                  <n-button size="small" >台风：{{ current_taifeng || '请选择台风' }}</n-button>
                 </n-popselect>
                 <!-- <n-button class="btn1" type="primary" ghost @click="handleLocateChina">
                   定位中国
@@ -83,12 +83,12 @@
             </div>
             <div class="param-item">
               <label>每秒刷新率: </label>
-              <input type="range" id="frameTime" min="5" max="20" value="10" step="1" style="width: 155px">
+              <input type="range" id="frameTime" min="5" max="20" value="10" step="1" style="width: 170px">
             </div>
 
             <div class="param-item">
               <label>线宽度: </label>
-              <input type="range" id="lineWidth" min="1" max="7" value="2" step="1" style="width: 180px">
+              <input type="range" id="lineWidth" min="1" max="7" value="2" step="1" style="width: 170px">
             </div>
 
             <div class="param-item">
@@ -116,34 +116,21 @@
         </transition>
 
         <transition name="fade" appear mode="out-in">
-          <div v-if="show_taifeng" class="heatmap-mask1">
+          <div v-if="show_taifeng_infa" class="heatmap-mask1">
             <div class="heatmap-container1">
 
               <n-scrollbar style="max-height: 100%; min-width: 450px;">
-                <img src="./assets/img/china.jpg" alt="Description" class="heatmap-image" /><br>
+                <img src="./assets/img/infa.jpg" alt="Description" class="heatmap-image" /><br>
+
+                <a href="http://jmm.ijournal.cn/html/2022/1/20220109.htm" class="tu_taifeng">台风“烟花”</a>
 
                 <div class="heatmap-text">
-                  <p>台风是什么——说台风
-                    来源：中国气象报社　　　发布时间：1996-08-26
-                    分享到：0
-                    　　说起台风，公众并不陌生。入夏以后，中央电视台天气预报节目的电视画面上，时而在我国东南沿海海面以及更远一点的太平洋洋面上有呈螺旋状近圆形的白色云区出现，气象工作者统称它为热带气旋。
-
-                    　　80年代以前，我国对这种发生在热带洋面上的大气涡旋统称为“台风”。自1989年起，我国采用了世界气象组织统一的名称和等级标准，按其中心附近最大风力分为四类。风力在7级（17.1米/秒）或以下的称为热带低气压；风力为8—9级（17.2—24.4米/秒）的称为热带风暴；风力为10—11级（24.5—32.6米/秒）称为强热带风暴；风力在12级（3⒉7米/秒）或以上的称为台风。在专业名称上，按不同强度虽有不同称谓，对这类强烈的热带涡旋，公众仍习惯统称为台风。这里给出的不久前先在我国台湾继之在福建登陆的9608号台风图像，它是气象卫星在36000公里高度上“拍摄”下来的照片。
-
-                    　　的确不错，从高空往下看，台风是一个近于圆形的大气涡旋。其中最引人注意的是它中心的那个小黑点，气象学家称它为台风眼。它是狂风暴雨包围中的一块“静地”，这里碧空无云，风和日丽。台风眼的直径一般在30一50公里左右，通常随着台风的增强，眼有逐渐缩小的趋势。另一个引人注意的就是那几条螺旋状云带，它们直接卷入台风内部，在台风眼周围则形成圆弧状云带。台风的强风区出现在低空围绕着台风眼的一个环状区域内，其宽度约100公里左右。台风中最强的上升暖湿气流在此发展，并形成深厚浓密的积雨云墙。台风的最大风速和最强暴雨往往集中出现在这个环状区域中。台风警报中常说“台风中心附近最大风力”，而不说“台风中心最大风力”，就是因为“台风最大风力”并不出现在中心（即台风眼）。环状区域之外，台风边缘之内称为台风的过渡区和外围区，在那里同样存在着不同程度的狂风暴雨。尤其在台风的东北象限，一般风雨之猛烈超过其它方位，通常称为台风的危险半圆。
-
-                    　　台风气流方向在南、北半球正好相反。在北半球的台风，低空气流是围绕台风眼作逆时针方向旋转，高空是顺时针方向旋转；在南半球的台风，低空气流为顺时针旋转，高空为逆时针旋转。但除旋转方向外，其构造南、北半球同出一辙。
-
-                    　　台风形成后其尺度大小不一。超级大台风其直径可达上千公里，微型小台风直径仅200余公里。在垂直方向上，云墙顶部高达12公里以上。
-
-                    　　有的台风构造很奇妙。在台风前进方向边缘的前沿，存在一条数百公里长的弧状飑线。飑线中存在强烈的不稳定对流运动，其风雨强烈和破坏的程度往往不亚于台风本体。有的台前飑线竟携带了数个小尺度的水龙卷。台风登陆前，飑线和一排水龙卷先对登陆地区造成重灾，随之台风在同一地区登陆肆虐，灾上加灾。有的台风虽无飑线，但本身携带龙卷登陆，其灾害也将显著超过一般的台风。袭击我国的台风，常发生在5—10月，以7、8两月最为频繁。
-
-                    　　大气中除热带气旋外，以涡旋形态存在的灾害性天气系统很多，如龙卷风、沙尘暴、海龙卷、温带气旋等。但其构造决然不同。前三者与热带气旋相比，尺度要小得多。后者与热带气旋大小相妨，但性质迥异。热带气旋中心是暖的，温带气旋是冷的；热带气旋中心轴线是垂直的，温带气旋轴线随高度急剧向西北倾斜；热带气旋大风区出现在低空中心附近的环状区域中，温带气旋大风区出现在高空气旋外围，呈带状分布；热带气旋不能生成和长时间地维持在陆地上，而温带气旋却可以在陆地上生成、维持和发展。
-                    （来源于1996年8月26日《中国气象报》 作者：陈联寿）
-
-                    相关新闻
+                  <p>
+                    强台风烟花（英文：Severe Typhoon In-Fa，国际编号：2106，联合台风警报中心：09W，菲律宾大气地球物理和天文管理局：Fabian
+                    ）为2021年太平洋台风季第6个被命名的风暴。台风“烟花”寿命奇长，路径诡异复杂，移速缓慢、陆上滞留时间长、风雨强度大、影响范围广，与多系统同期活跃并相互影响，造成中国各地总计482万人受灾，直接经济损失132亿元
+                    。其亦通过水汽输送间接参与影响了“7·20河南暴雨”灾情 。
                   </p>
-                </div><br />
+                </div><br/>
 
               </n-scrollbar>
             </div>
@@ -173,14 +160,15 @@ import { ref } from 'vue'
 import 'naive-ui';
 import { taifengData_Malakas, taifengData_Chaba, taifengData_Nalgae, taifengData_Surigae, taifengData_Infa } from '@/types/data';
 import axios from 'axios';
+import * as $ from 'jquery';
 
 const map = ref<string>('');
 const cesiumViewerRef = ref();
 const show_taifeng = ref<boolean>(false);
 
-const showToolbar = ref<boolean>(true);
+const showToolbar = ref<boolean>(false);
 const isDialogOpen = ref(false);
-
+const show_taifeng_infa = ref(false);
 
 const current_taifeng = ref('Malakas');
 let current_table = ref();
@@ -226,7 +214,10 @@ const handleRanging = (key: string) => {
   else {
     handler?.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     handler?.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-    window.CesiumViewer.entities.removeAll();
+    $.each(AllEntities,function (_index,value) 
+    {
+      window.CesiumViewer.entities.remove(value);
+    });
     AllEntities = [];
     positions = [];
     StartPoint = 0;
@@ -326,7 +317,8 @@ function createPoint(point: Cesium.Cartesian3, text: { toFixed: (arg0: number) =
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       verticalOrigin: Cesium.VerticalOrigin.TOP,
       pixelOffset: new Cesium.Cartesian2(50, 0),
-      clampToGround: true
+      clampToGround: true,
+      disableDepthTestDistance:Number.POSITIVE_INFINITY
     }
   });
   AllEntities.push(drawPoint);
@@ -363,25 +355,6 @@ const handlePopselectClick = () => {
   isDialogOpen.value = !isDialogOpen.value;
   isDialogOpen.value = !isDialogOpen.value;
 };
-
-const options_name_fengchang = ref([
-  {
-    label: "120",
-    value: "120"
-  },
-  {
-    label: "1231",
-    value: "1231"
-  },
-  {
-    label: "1227",
-    value: "1227"
-  },
-  {
-    label: "1224",
-    value: "1224"
-  },
-])
 
 const options_name_taifeng = ref([
   {
@@ -578,19 +551,33 @@ const options_taifeng = ref([
 
 
 const handleTaifengSelect = (key: string) => {
-  if (key != 'clear') {
-    if (show_taifeng.value == true) {
+  if (key != 'clear') 
+  {
+    if(key == 'Infa')
+    {
+      show_taifeng_infa.value = true;
+    }
+    else
+    {
+      show_taifeng_infa.value = false;
+    }
+    if (show_taifeng.value == true) 
+    {
       cesiumViewerRef.value.clearTaiFeng();
       cesiumViewerRef.value.initTaiFeng(data[key]);
     }
-    else {
+    else 
+    {
       cesiumViewerRef.value.initTaiFeng(data[key]);
       show_taifeng.value = true;
     }
 
   }
-  else {
-    if (show_taifeng.value == true) {
+  else 
+  {
+    if (show_taifeng.value == true) 
+    {
+      show_taifeng_infa.value = false;
       cesiumViewerRef.value.clearTaiFeng();
       show_taifeng.value = false;
     }
@@ -641,6 +628,24 @@ const useGoogleMap = () => {
   map.value = "GoogleMaps";
 };
 
+const useAmap = () => {
+
+  window.CesiumViewer.imageryLayers.removeAll();
+
+  window.CesiumViewer.imageryLayers.addImageryProvider(
+    new Cesium.UrlTemplateImageryProvider({
+      url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}'
+    })
+  );
+
+  window.CesiumViewer.imageryLayers.addImageryProvider(
+    new Cesium.UrlTemplateImageryProvider({
+      url: 'http://webst02.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8'
+    })
+  );
+
+  map.value = "AMap";
+};
 const handleLayerSelect = (key: string) => {
   if (key != 'clear') {
     const split_url = key.split('?')
@@ -700,9 +705,14 @@ const show_taifeng_data = () => {
   max-height: 50vh;
   margin-top: 20px;
   margin-bottom: 30px;
-  margin-left: 0px;
-  margin-right: 50px;
+  margin-left: 20px;
+  margin-right: 0px;
 
+}
+
+.tu_taifeng{
+  margin-left: 180px;
+  margin-right: 0px;
 }
 
 .heatmap-text {
@@ -771,7 +781,7 @@ const show_taifeng_data = () => {
 
 .button-group1 {
   padding-top: 15px;
-  margin-left: 10px;
+  margin-left: 50px;
 }
 
 .button-group2 {
