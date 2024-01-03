@@ -1,32 +1,32 @@
-import * as Cesium from 'cesium';
-import CanvasParticle from './canvasparticle';
-import CanvasWindField from './canvasWindField.js';
-import WindyColor from './windyColor';
-import { isThisTypeNode } from 'typescript';
-import { DataThresholdingSharp } from '@vicons/material';
+import * as Cesium from "cesium";
+import CanvasParticle from "./canvasparticle";
+import CanvasWindField from "./canvasWindField.js";
+import WindyColor from "./windyColor";
+import { isThisTypeNode } from "typescript";
+import { DataThresholdingSharp } from "@vicons/material";
 
 export default class CesiumWindy {
   constructor(json, params) {
     this.windData = json;
     this.viewer = params.viewer;
     this.canvas = params.canvas;
-    this.extent = params.extent || [];// 风场绘制时的地图范围，范围不应该大于风场数据的范围，顺序：west/east/south/north，有正负区分，如：[110,120,30,36]
-    this.canvasContext = params.canvas.getContext('2d');// canvas上下文
-    this.canvasWidth = params.canvasWidth || 300;// 画板宽度
-    this.canvasHeight = params.canvasHeight || 180;// 画板高度
-    this.speedRate = params.speedRate || 1000;// 风前进速率，意思是将当前风场横向纵向分成100份，再乘以风速就能得到移动位置，无论地图缩放到哪一级别都是一样的速度，可以用该数值控制线流动的快慢，值越大，越慢，
-    this.particlesNumber = params.particlesNumber || 1200;// 初始粒子总数，根据实际需要进行调节
-    this.maxAge = params.maxAge || 100;// 每个粒子的最大生存周期
-    this.frameTime = 1000 / (params.frameRate || 10);// 每秒刷新次数，因为requestAnimationFrame固定每秒60次的渲染，所以如果不想这么快，就把该数值调小一些
-    this.color = params.color || '#eeeeee';// 线颜色，提供几个示例颜色['#14208e','#3ac32b','#e0761a']
-    this.lineWidth = params.lineWidth || 1;// 线宽度
+    this.extent = params.extent || []; // 风场绘制时的地图范围，范围不应该大于风场数据的范围，顺序：west/east/south/north，有正负区分，如：[110,120,30,36]
+    this.canvasContext = params.canvas.getContext("2d"); // canvas上下文
+    this.canvasWidth = params.canvasWidth || 300; // 画板宽度
+    this.canvasHeight = params.canvasHeight || 180; // 画板高度
+    this.speedRate = params.speedRate || 1000; // 风前进速率，意思是将当前风场横向纵向分成100份，再乘以风速就能得到移动位置，无论地图缩放到哪一级别都是一样的速度，可以用该数值控制线流动的快慢，值越大，越慢，
+    this.particlesNumber = params.particlesNumber || 1200; // 初始粒子总数，根据实际需要进行调节
+    this.maxAge = params.maxAge || 100; // 每个粒子的最大生存周期
+    this.frameTime = 1000 / (params.frameRate || 10); // 每秒刷新次数，因为requestAnimationFrame固定每秒60次的渲染，所以如果不想这么快，就把该数值调小一些
+    this.color = params.color || "#eeeeee"; // 线颜色，提供几个示例颜色['#14208e','#3ac32b','#e0761a']
+    this.lineWidth = params.lineWidth || 1; // 线宽度
 
-    this.initExtent = [];// 风场初始范围
-    this.calc_speedRate = [0, 0];// 根据speedRate参数计算经纬度步进长度
+    this.initExtent = []; // 风场初始范围
+    this.calc_speedRate = [0, 0]; // 根据speedRate参数计算经纬度步进长度
     this.windField = null;
     this.particles = [];
-    this.animateFrame = null;// requestAnimationFrame事件句柄，用来清除操作
-    this.isdistory = params.isdistory;// 是否销毁，进行删除操作
+    this.animateFrame = null; // requestAnimationFrame事件句柄，用来清除操作
+    this.isdistory = params.isdistory; // 是否销毁，进行删除操作
     this.windyColor = params.windyColor || new WindyColor();
     // eslint-disable-next-line
     this._init();
@@ -37,7 +37,12 @@ export default class CesiumWindy {
     const self = this;
     // 创建风场网格
     this.windField = this.createField();
-    this.initExtent = [this.windField.west-180, this.windField.east - 180, this.windField.south, this.windField.north];
+    this.initExtent = [
+      this.windField.west - 180,
+      this.windField.east - 180,
+      this.windField.south,
+      this.windField.north,
+    ];
     // 如果风场创建时，传入的参数有extent，就根据给定的extent，让随机生成的粒子落在extent范围内
     if (this.extent.length !== 0) {
       this.extent = [
@@ -55,7 +60,7 @@ export default class CesiumWindy {
     for (let i = 0; i < this.particlesNumber; i++) {
       this.particles.push(this.randomParticle(new CanvasParticle()));
     }
-    this.canvasContext.fillStyle = 'rgba(0, 0, 0, 0.97)';
+    this.canvasContext.fillStyle = "rgba(0, 0, 0, 0.97)";
     this.canvasContext.globalAlpha = 0.6;
     this.animate();
     let then = Date.now();
@@ -66,22 +71,25 @@ export default class CesiumWindy {
         const delta = now - then;
         if (delta > self.frameTime) {
           // eslint-disable-next-line no-mixed-operators
-          then = now - delta % self.frameTime;
+          then = now - (delta % self.frameTime);
           self.animate();
         }
       } else {
         self.removeLines();
       }
-    }());
+    })();
   }
 
   // 计算经纬度步进长度
   // eslint-disable-next-line
   _calcStep() {
-    const isextent = (this.extent.length !== 0);
+    const isextent = this.extent.length !== 0;
     const calcExtent = isextent ? this.extent : this.initExtent;
     const calcSpeed = this.speedRate;
-    this.calc_speedRate = [(calcExtent[1] - calcExtent[0]) / calcSpeed, (calcExtent[3] - calcExtent[2]) / calcSpeed];
+    this.calc_speedRate = [
+      (calcExtent[1] - calcExtent[0]) / calcSpeed,
+      (calcExtent[3] - calcExtent[2]) / calcSpeed,
+    ];
   }
 
   // 根据现有参数重新生成风场
@@ -92,13 +100,23 @@ export default class CesiumWindy {
     this._init();
   }
 
-   // 根据现有参数重新生成风场
+  // 根据现有参数重新生成风场
   redraw_param(params) {
-    this.speedRate = params.speedRate || 1000;// 风前进速率，意思是将当前风场横向纵向分成100份，再乘以风速就能得到移动位置，无论地图缩放到哪一级别都是一样的速度，可以用该数值控制线流动的快慢，值越大，越慢，
-    this.particlesNumber = params.particlesNumber || 1200;// 初始粒子总数，根据实际需要进行调节
-    this.maxAge = params.maxAge || 100;// 每个粒子的最大生存周期
-    this.frameTime = 1000 / (params.frameRate || 10);// 每秒刷新次数，因为requestAnimationFrame固定每秒60次的渲染，所以如果不想这么快，就把该数值调小一些
-    this.lineWidth = params.lineWidth || 1;// 线宽度
+    this.speedRate = params.speedRate || 1000; // 风前进速率，意思是将当前风场横向纵向分成100份，再乘以风速就能得到移动位置，无论地图缩放到哪一级别都是一样的速度，可以用该数值控制线流动的快慢，值越大，越慢，
+    this.particlesNumber = params.particlesNumber || 1200; // 初始粒子总数，根据实际需要进行调节
+    this.maxAge = params.maxAge || 100; // 每个粒子的最大生存周期
+    this.frameTime = 1000 / (params.frameRate || 10); // 每秒刷新次数，因为requestAnimationFrame固定每秒60次的渲染，所以如果不想这么快，就把该数值调小一些
+    this.lineWidth = params.lineWidth || 1; // 线宽度
+
+    window.cancelAnimationFrame(this.animateFrame);
+    this.particles = [];
+    // eslint-disable-next-line
+    this._init();
+  }
+
+  // 根据现有数据重新生成风场
+  redraw_withdata(data) {
+    this.windData = data;
 
     window.cancelAnimationFrame(this.animateFrame);
     this.particles = [];
@@ -123,9 +141,7 @@ export default class CesiumWindy {
         self.randomParticle(particle);
       }
       if (particle.age > 0) {
-        const {
-          tlng, tlat,
-        } = particle;
+        const { tlng, tlat } = particle;
         // eslint-disable-next-line
         const gridpos = self._togrid(tlng, tlat);
         const tx = gridpos[0];
@@ -162,7 +178,13 @@ export default class CesiumWindy {
   // 粒子是否在地图范围内
   isInExtent(lng, lat) {
     const calcExtent = this.initExtent;
-    if ((lng >= calcExtent[0] && lng <= calcExtent[1]) && (lat >= calcExtent[2] && lat <= calcExtent[3])) return true;
+    if (
+      lng >= calcExtent[0] &&
+      lng <= calcExtent[1] &&
+      lat >= calcExtent[2] &&
+      lat <= calcExtent[3]
+    )
+      return true;
     return false;
   }
 
@@ -180,11 +202,11 @@ export default class CesiumWindy {
     this.windData.forEach((record) => {
       const type = `${record.header.parameterCategory},${record.header.parameterNumber}`;
       switch (type) {
-        case '2,2':
+        case "2,2":
           uComponent = record.data;
           header = record.header;
           break;
-        case '2,3':
+        case "2,3":
           vComponent = record.data;
           break;
         default:
@@ -202,7 +224,7 @@ export default class CesiumWindy {
     window.cancelAnimationFrame(this.animateFrame);
     this.isdistory = true;
     // this.canvas.width = 1;
-    document.getElementById('content')?.removeChild(this.canvas);
+    document.getElementById("content")?.removeChild(this.canvas);
   }
 
   // 根据粒子当前所处的位置(棋盘网格位置)，计算经纬度，在根据经纬度返回屏幕坐标
@@ -210,8 +232,14 @@ export default class CesiumWindy {
   _tomap(lng, lat, particle) {
     const ct3 = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
     // 判断当前点是否在地球可见端
-    const isVisible = new Cesium.EllipsoidalOccluder(Cesium.Ellipsoid.WGS84, this.viewer.camera.position).isPointVisible(ct3);
-    const pos = Cesium.SceneTransforms.wgs84ToWindowCoordinates(this.viewer.scene, ct3);
+    const isVisible = new Cesium.EllipsoidalOccluder(
+      Cesium.Ellipsoid.WGS84,
+      this.viewer.camera.position
+    ).isPointVisible(ct3);
+    const pos = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+      this.viewer.scene,
+      ct3
+    );
     if (!isVisible) {
       // eslint-disable-next-line no-param-reassign
       particle.age = 0;
@@ -225,9 +253,13 @@ export default class CesiumWindy {
   _togrid(lng, lat) {
     const field = this.windField;
     // eslint-disable-next-line no-mixed-operators
-    const x = (lng - this.initExtent[0]) / (this.initExtent[1] - this.initExtent[0]) * (field.cols - 1);
+    const x =
+      ((lng - this.initExtent[0]) / (this.initExtent[1] - this.initExtent[0])) *
+      (field.cols - 1);
     // eslint-disable-next-line no-mixed-operators
-    const y = (this.initExtent[3] - lat) / (this.initExtent[3] - this.initExtent[2]) * (field.rows - 1);
+    const y =
+      ((this.initExtent[3] - lat) / (this.initExtent[3] - this.initExtent[2])) *
+      (field.rows - 1);
     return [x, y];
   }
 
@@ -237,9 +269,9 @@ export default class CesiumWindy {
     const { particles } = this;
     this.canvasContext.lineWidth = self.lineWidth;
     // 后绘制的图形和前绘制的图形如果发生遮挡的话，只显示后绘制的图形跟前一个绘制的图形重合的前绘制的图形部分，示例：https://www.w3school.com.cn/tiy/t.asp?f=html5_canvas_globalcompop_all
-    this.canvasContext.globalCompositeOperation = 'destination-in';
+    this.canvasContext.globalCompositeOperation = "destination-in";
     this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-    this.canvasContext.globalCompositeOperation = 'lighter';// 重叠部分的颜色会被重新计算
+    this.canvasContext.globalCompositeOperation = "lighter"; // 重叠部分的颜色会被重新计算
     this.canvasContext.globalAlpha = 0.9;
     // this.canvasContext.beginPath();
     // const gradient = this.canvasContext.createLinearGradient(0, 0, 170, 0);
@@ -278,15 +310,22 @@ export default class CesiumWindy {
   // eslint-disable-next-line class-methods-use-this
   fRandomBy(under, over) {
     switch (arguments.length) {
-      case 1: return parseInt(Math.random() * under + 1, 10);
-      case 2: return parseInt(Math.random() * (over - under + 1) + under, 10);
-      default: return 0;
+      case 1:
+        return parseInt(Math.random() * under + 1, 10);
+      case 2:
+        return parseInt(Math.random() * (over - under + 1) + under, 10);
+      default:
+        return 0;
     }
   }
 
   // 根据当前风场extent随机生成粒子
   randomParticle(particle) {
-    let safe = 30; let x = -1; let y = -1; let lng = null; let lat = null;
+    let safe = 30;
+    let x = -1;
+    let y = -1;
+    let lng = null;
+    let lat = null;
     // eslint-disable-next-line eqeqeq
     const hasextent = this.extent.length != 0;
     // eslint-disable-next-line camelcase
@@ -298,8 +337,14 @@ export default class CesiumWindy {
           const pos_x = this.fRandomBy(0, this.canvasWidth);
           // eslint-disable-next-line camelcase
           const pos_y = this.fRandomBy(0, this.canvasHeight);
-          const cartesian = this.viewer.camera.pickEllipsoid(new Cesium.Cartesian2(pos_x, pos_y), this.viewer.scene.globe.ellipsoid);
-          const cartographic = this.viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian);
+          const cartesian = this.viewer.camera.pickEllipsoid(
+            new Cesium.Cartesian2(pos_x, pos_y),
+            this.viewer.scene.globe.ellipsoid
+          );
+          const cartographic =
+            this.viewer.scene.globe.ellipsoid.cartesianToCartographic(
+              cartesian
+            );
           if (cartographic) {
             // 将弧度转为度的十进制度表示
             lng = Cesium.Math.toDegrees(cartographic.longitude);
@@ -322,7 +367,7 @@ export default class CesiumWindy {
         // eslint-disable-next-line prefer-destructuring
         y = gridpos[1];
       }
-    // eslint-disable-next-line no-plusplus
+      // eslint-disable-next-line no-plusplus
     } while (this.windField.getIn(x, y)[2] <= 0 && safe++ < 30);
     // eslint-disable-next-line no-underscore-dangle
     // const _color = ['#EFFFFD', '#B8FFF9', '#85F4FF', '#42C2FF'];
@@ -345,7 +390,7 @@ export default class CesiumWindy {
     // eslint-disable-next-line prefer-destructuring, no-param-reassign
     particle.speed = uv[2];
     // eslint-disable-next-line no-param-reassign
-    particle.age = Math.round(Math.random() * this.maxAge);// 每一次生成都不一样
+    particle.age = Math.round(Math.random() * this.maxAge); // 每一次生成都不一样
     // eslint-disable-next-line no-param-reassign
     particle.color = this.windyColor.getWindColor(particle.speed);
     return particle;

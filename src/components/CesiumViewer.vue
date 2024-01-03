@@ -9,18 +9,23 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { onMounted } from "vue";
 import "cesium-windy-canvas";
 
-import CesiumWindyData from '../mock/cesiumwindy.data';
-import CanvasParticle from '../windy/canvasparticle';
-import CanvasWindField from '../windy/canvaswindfield';
-import CesiumWindy from '../windy/cesiumwindy';
-import WindyColor from '../windy/windyColor';
+import CesiumWindyData from '@/mock/cesiumwindy.data';
 
+import CesiumWindy from '@/windy/cesiumwindy';
 import taifengImg from '@/assets/img/tf.png';
+
+import WindField from '../mock/20231231.json';
+import axios from 'axios';
+// import CanvasParticle from '../windy/canvasparticle';
+// import CanvasWindField from '../windy/canvaswindfield';
+// import WindyColor from '../windy/windyColor';
+
 
 //风场数据
 let windy;
-let wind_params;
-var wind_judge = 1;
+let wind_params: { particlesNumber: any; maxAge: any; speedRate: any; frameTime: any; lineWidth: any; viewer?: Cesium.Viewer; canvas?: HTMLElement | null; canvasWidth?: number; canvasHeight?: number; isdistory?: boolean; };
+var wind_judge = 0;
+
 
 //台风数据
 const lineAllEntity: any[] = [];
@@ -62,14 +67,14 @@ const typhoonFlytoPath = async (viewer: Viewer, positions: string | any[], typho
   viewer.clock.stopTime = stop.clone();
   viewer.clock.currentTime = start.clone();
 
-  viewer.clock.multiplier = 5;
+  viewer.clock.multiplier = 3;
 
   const property = await computeFlight(start, positions);
 
-  let rotation = Cesium.Math.toRadians(30);
+  let rotation = Cesium.Math.toRadians(60);
 
   function getRotationValue() {
-    rotation += -0.03;
+    rotation += -0.1;
     return rotation;
   }
 
@@ -133,7 +138,6 @@ const typhoonFlytoPath = async (viewer: Viewer, positions: string | any[], typho
   const oldItem: string | any[] = [];
   let num = 0;
 
-
   preUpdateHandler = function () {
     if (typhoonEntity) {
       const center = typhoonEntity.position?.getValue(viewer.clock.currentTime);
@@ -161,7 +165,7 @@ const typhoonFlytoPath = async (viewer: Viewer, positions: string | any[], typho
                 if ((selectAll[selectAll.length - 1].x == oldItem[0]) && (selectAll[selectAll.length - 1].y == oldItem[1])) {
                   // 清除台风飞行飞行跟踪
                   if (preUpdateHandler) {
-                    //viewer.scene.preUpdate.removeEventListener(preUpdateHandler);
+                    viewer.scene.preUpdate.removeEventListener(preUpdateHandler);
                   }
 
                   setTimeout(() => {
@@ -181,7 +185,21 @@ const typhoonFlytoPath = async (viewer: Viewer, positions: string | any[], typho
                     item['时间'];
                 }
               }
-            } else {
+              else {
+                if (num < pointAll.length) {
+                  pointAll[num].label.text =
+                    '风速' +
+                    item['风速'] +
+                    'm/s \n' +
+                    item['日期'] +
+                    ' ' +
+                    item['时间'];
+
+                }
+
+              }
+            }
+            else {
               oldItem[0] = Number(item.x);
               oldItem[1] = Number(item.y);
               if (num < pointAll.length) {
@@ -203,8 +221,8 @@ const typhoonFlytoPath = async (viewer: Viewer, positions: string | any[], typho
     interpolationDegree: 3,
     interpolationAlgorithm: Cesium.LagrangePolynomialApproximation,
   });
-};
 
+};
 
 
 const computeFlight = async (start: any, positions: string | any[]) => {
@@ -224,11 +242,6 @@ const computeFlight = async (start: any, positions: string | any[]) => {
 
 const initTaiFeng = async (taifengData: any) => {
 
-  // drawLine(jingjiexian24, false, '24小时警戒线');
-  // drawLine(jingjiexian48, true, '48小时警戒线');
-  // addLabelMehods('24小时警戒线', [118.859085804271217, 18.184787653347598, 0]);
-  // addLabelMehods('48小时警戒线', [131.945923047920701, 15.047864893994642, 0]);
-
   const data = [...taifengData].reverse();
   const typhoonName = '台风';
   const result = [];
@@ -242,11 +255,11 @@ const initTaiFeng = async (taifengData: any) => {
       };
       result.push(d);
 
-      if (p % 10 == 0) {
+      if (p % 11 == 0) {
         selectAll.push(data[p]);
         let color = null;
         const fs = parseFloat(data[p]['风速'].split('m')[0]);
-        if (fs >= 15 && fs < 20) {
+        if (fs >= 0 && fs < 20) {
           color = new Cesium.Color(0, 0, 205 / 255);
         } else if (fs >= 20 && fs < 25) {
           color = new Cesium.Color(1, 1, 0);
@@ -319,18 +332,18 @@ onMounted(() => {
       homeButton: true,
       selectionIndicator: true,
       infoBox: false,
-      sceneModePicker: false,
+      sceneModePicker: true,
       timeline: false,
       navigationHelpButton: true,
       navigationInstructionsInitiallyVisible: false,
-      scene3DOnly: true,
+      scene3DOnly: false,
       useDefaultRenderLoop: true,
       showRenderLoopErrors: false,
       useBrowserRecommendedResolution: true,
       automaticallyTrackDataSourceClocks: true,
       orderIndependentTranslucency: true,
       shadows: false,
-      projectionPicker: true,
+      projectionPicker: false,
       requestRenderMode: true,
 
       skyBox: new Cesium.SkyBox({//用于渲染星空的SkyBox对象
@@ -356,13 +369,21 @@ onMounted(() => {
 
   window.CesiumViewer = viewer;
 
+  viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function (e) {
+    e.cancel = true;
+    //你要飞的位置
+    viewer.camera.flyTo({
+      destination: Cesium.Rectangle.fromDegrees(80, 26, 140.0, 35.0)
+    });
+  });
+
   //@经纬度展示
   var canvas = window.CesiumViewer.scene.canvas;
   //具体事件的实现
   var ellipsoid = window.CesiumViewer.scene.globe.ellipsoid;
   var handler = new Cesium.ScreenSpaceEventHandler(canvas);
   let that = this;
-  handler.setInputAction(function (movement) {
+  handler.setInputAction(function (movement: { endPosition: Cesium.Cartesian2; }) {
     //捕获椭球体，将笛卡尔二维平面坐标转为椭球体的笛卡尔三维坐标，返回球体表面的点
     var cartesian = window.CesiumViewer.camera.pickEllipsoid(
       movement.endPosition,
@@ -423,11 +444,49 @@ onMounted(() => {
   };
   // @风场 调用
   // 使用 CesiumWindyApi.CesiumWindy()
+  windycanvas.style.display = "none";
   windy = new CesiumWindy(CesiumWindyData, wind_params);
+  windy.clearRect()
   // windy._resize(window.innerWidth, window.innerHeight);
+  const dataSelect = document.getElementById('dataSelect');
+  dataSelect.addEventListener('change', function () {
+    const selectedData = dataSelect.value;
+    console.log(selectedData); // 打印用户选择的值
+    // 在此处添加处理选项的代码
+    //更新
+    axios.get('http://127.0.0.1:9993/typhoons/eid/'+selectedData)
+      .then(response => {
+        const dataWithoutId = response.data.map(item => {
+          // 使用解构赋值将 _id 字段移除
+          const { _id, eid, ...itemWithoutId } = item;
+          return itemWithoutId;
+        });
+        windy.redraw_withdata(dataWithoutId)
+        // m_WindField = JSON.stringify(dataWithoutId)
+      })
+      .catch(error => {
+        console.error(error);
+      });
+
+  });
+
+  // //更新
+  // axios.get('http://127.0.0.1:9993/typhoons/eid/102')
+  //   .then(response => {
+  //     const dataWithoutId = response.data.map(item => {
+  //       // 使用解构赋值将 _id 字段移除
+  //       const { _id, eid, ...itemWithoutId } = item;
+  //       return itemWithoutId;
+  //     });
+  //     windy.redraw_withdata(dataWithoutId)
+  //     // m_WindField = JSON.stringify(dataWithoutId)
+  //   })
+  //   .catch(error => {
+  //     console.error(error);
+  //   });
 
   //风场移动时停止
-  handler.setInputAction(function (click) {
+  handler.setInputAction(function (click: { value: boolean; }) {
     click.value = true
     if (windy) {
       // windy.clearRect()
@@ -436,7 +495,7 @@ onMounted(() => {
     }
   }, Cesium.ScreenSpaceEventType.LEFT_DOWN)
 
-  handler.setInputAction(function (click) {
+  handler.setInputAction(function (click: { value: boolean; }) {
     click.value = true
     if (windy) {
       if (wind_judge) {
@@ -448,12 +507,34 @@ onMounted(() => {
     }
   }, Cesium.ScreenSpaceEventType.LEFT_UP)
 
+  //风场移动时停止
+  handler.setInputAction(function (click) {
+    click.value = true
+    if (windy) {
+      // windy.clearRect()
+      var windycanvas = document.getElementById("windycanvas");
+      windycanvas.style.display = "none";
+    }
+  }, Cesium.ScreenSpaceEventType.MIDDLE_DOWN)
+
+  handler.setInputAction(function (click) {
+    click.value = true
+    if (windy) {
+      if (wind_judge) {
+        windy.start()
+        windy.redraw()
+        var windycanvas = document.getElementById("windycanvas");
+        windycanvas.style.display = "block";
+      }
+    }
+  }, Cesium.ScreenSpaceEventType.MIDDLE_UP)
+
   //粒子数目
   var particleNumInput = document.getElementById("particleNum");
   if (particleNumInput) {
     particleNumInput.oninput = function (event) {
       // 获取当前输入值
-      var particleNum = event.target.value;
+      var particleNum = event.target?.value;
       wind_params.particlesNumber = particleNum;
       windy.redraw_param(wind_params);
     }
@@ -464,7 +545,7 @@ onMounted(() => {
   if (particleLifeInput) {
     particleLifeInput.oninput = function (event) {
       // 获取当前输入值
-      var particleLife = event.target.value;
+      var particleLife = event.target?.value;
       wind_params.maxAge = particleLife;
       windy.redraw_param(wind_params);
     }
@@ -475,7 +556,7 @@ onMounted(() => {
   if (particleVelocityScaleInput) {
     particleVelocityScaleInput.oninput = function (event) {
       // 获取当前输入值
-      var particleVelocityScale = event.target.value;
+      var particleVelocityScale = event.target?.value;
       wind_params.speedRate = particleVelocityScale;
       windy.redraw_param(wind_params);
     }
@@ -486,7 +567,7 @@ onMounted(() => {
   if (frameTimeInput) {
     frameTimeInput.oninput = function (event) {
       // 获取当前输入值
-      var frameTime = event.target.value;
+      var frameTime = event.target?.value;
       wind_params.frameTime = frameTime;
       windy.redraw_param(wind_params);
     }
@@ -496,7 +577,7 @@ onMounted(() => {
   if (lineWidthInput) {
     lineWidthInput.oninput = function (event) {
       // 获取当前输入值
-      var lineWidth = event.target.value;
+      var lineWidth = event.target?.value;
       wind_params.lineWidth = lineWidth;
       windy.redraw_param(wind_params);
     }
@@ -505,7 +586,7 @@ onMounted(() => {
   //@风场开关
   var startField = document.getElementById("startField");
   if (startField) {
-    startField.onclick = function (event) {
+    startField.onclick = function () {
       if (windy) {
         if (wind_judge) {
           windy.clearRect()
@@ -524,10 +605,7 @@ onMounted(() => {
       wind_judge = (wind_judge + 1) % 2
     }
   }
-
 });
-
-
 
 
 defineExpose({
